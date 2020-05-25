@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: appd-tls-admin
+  namespace: appdynamics
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: appd-tls-admin-role
+subjects:
+- kind: ServiceAccount
+  name: appd-tls-admin
+  namespace: appdynamics
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: appd-tls-gen
+  namespace: appdynamics
+data:
+  CA_SUBJECT: "AppD-CA"
+  CA_EXPIRE: "3650"
+
+  SSL_SUBJECT: k8s-sidecar-injector
+  SSL_EXPIRE: "3650"
+  SSL_DNS: "k8s-sidecar-injector-prod,k8s-sidecar-injector-prod.appdynamics,k8s-sidecar-injector-prod.appdynamics.svc"
+
+  K8S_NAME: "appd-tls"
+  K8S_NAMESPACE: "appdynamics"
+  K8S_SAVE_CA_KEY: "true"
+  K8S_SAVE_CA_CRT: "true"
+  SILENT: "false"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: appd-tls-gen-job
+  namespace: appdynamics
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: appd-tls-admin
+      initContainers:
+      - name: omgwtfssl
+        image: paulczar/omgwtfssl:latest
+        envFrom:
+        - configMapRef:
+            name: appd-tls-gen
+        volumeMounts:
+        - name: certs-path
+          mountPath: /certs
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl:latest
+        command: ["kubectl", "apply", "-f", "/certs/secret.yaml"]
+        volumeMounts:
+        - name: certs-path
+          mountPath: /certs
+      volumes:
+      - name: certs-path
+        emptyDir: {}

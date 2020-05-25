@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-sample-deployment
+  labels:
+    app: tomcat-sample
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tomcat
+  template:
+    metadata:
+      labels:
+        app: tomcat
+      annotations:
+        injector.tumblr.com/request: appd-java
+        k8s.appdynamics.com/tier-name: Web
+        k8s.appdynamics.com/reuse-node-name: "true"
+        k8s.appdynamics.com/reuse-node-name-prefix: "Node"
+    spec:
+      containers:
+        - name: tomcat-sample
+          image: <your docker application image>
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          securityContext: {}

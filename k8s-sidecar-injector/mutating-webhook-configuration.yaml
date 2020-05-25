@@ -1,0 +1,24 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: "tumblr-sidecar-injector-webhook"
+  labels:
+    app: k8s-sidecar-injector
+webhooks:
+- name: "injector.tumblr.com"
+  failurePolicy: "Ignore" # we fail "open" if the webhook is down hard
+  rules:
+  - operations: [ "CREATE" ]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  clientConfig:
+    # https://github.com/kubernetes/kubernetes/blob/v1.10.0-beta.1/staging/src/k8s.io/api/admissionregistration/v1beta1/types.go#L218
+    # note: k8s is smart enough to use 443 or the only exposed port on the service
+    # note: this requires the service to serve TLS directly (not thru ingress)
+    service:
+      name: "k8s-sidecar-injector-prod"
+      namespace: "appdynamics"
+      path: "/mutate"   # what /url/slug to send requests at
+    # See README.md for how this was generated!
+    caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURORENDQWh5Z0F3SUJBZ0lVUWlaOVQ4c0ZtSDArdzgvRDJmd2NkeTdtYUVzd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF3d0hRWEJ3UkMxRFFUQWVGdzB5TURBMU1qUXlNekF5TVRSYUZ3MHpNREExTWpJeQpNekF5TVRSYU1CSXhFREFPQmdOVkJBTU1CMEZ3Y0VRdFEwRXdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCCkR3QXdnZ0VLQW9JQkFRQ29TZ3BuU0MzcC8xZG5BK3pOS3NpV1ZrVnFsUldmMThSalc0dGY1SHJwTlhVeFNVT2oKN0FjS3pWbHAxbEQySExRUlp2SlJmMXJ2VzVtazlXOWRSTzJycjE1UUJZWHlUNkthVTNCeDRDMWJVVS9YUVdnYQozbWRFYWEvLytXNDAvbEppTWtpbkhJWENxNWdWTGdEMXc5WDJLVmVmbHozVkF3ekFoZ3JhTUliYmU5L0FLQmZ3ClZoR0RJU3UwTC92ZHcvd0V5OXZSbHJBSkV4Y1J3dnRNUkNyaUdRZDNIZHlkbWZpVWVab1o5ZzhZQVp3dXNMRUsKOUJjVEFuWUNpNk5OTnpackxtRGpMVXZhaWdJS2JBQmxZT3R3T3ZTQmhIQWMzMFo5cko2ZTM2WFVVaUtQaEtRaAoxYTJmZkZ2VUhzVnBUUm05S2NReTdKNHU0NUtJdlBqNzhGYW5BZ01CQUFHamdZRXdmekFQQmdOVkhSTUJBZjhFCkJUQURBUUgvTUIwR0ExVWREZ1FXQkJSY1NWRFBGYmtEVjQ0VXhOMzVCNFFaTVJ4bTJEQk5CZ05WSFNNRVJqQkUKZ0JSY1NWRFBGYmtEVjQ0VXhOMzVCNFFaTVJ4bTJLRVdwQlF3RWpFUU1BNEdBMVVFQXd3SFFYQndSQzFEUVlJVQpRaVo5VDhzRm1IMCt3OC9EMmZ3Y2R5N21hRXN3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUM1OTR1Y2xNVm53CnZXZUczTjJQZkxwTjYySDVoaGJPeUFXSVhGRVVOczZacks4U2tQdnRaQ2tVQ0RLVkF4S2k2TjJZZG9oMW5RbEYKR3g1U2hYcVpDcmR6dHNHZENWd002ZFl3bkJQMU9Ha1NWQ3d6elZmbmwreWxyQWh5R2RudEs5WGo1WGlxTHE2LwpsRDI3WC9FdFQyakhmRmtGTktadDU5QTFFcEh3THo0OHZ2QkZ4aUhEdkJUaEIrbE93eld0bUhDV2pmc29wSUJtCnpRcWxpZ2w1aDBwZFRMVlZicDVCdjJmRHZWcTJ1Vml1dlNUQ0NSVEdBRkVnTE9QSkdUZG8xTUVGMyt3M2RuWmoKY0JadnAxU29CVW5iVW9HUzdxemU4ODBVT2F1TXBuTHlRZjNTRWllcHBGNy96anN6ZUN0em1EUFJxZE1kZCtPMgptemxRcVhoU3NZMD0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo="
